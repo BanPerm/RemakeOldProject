@@ -1,0 +1,1 @@
+Inspirer par le jeu Adventure Communiste et tirer d'une blague
