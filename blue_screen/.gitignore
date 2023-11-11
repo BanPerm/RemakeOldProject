@@ -1,0 +1,11 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+
+# Fichiers et dossiers spécifiques à l'environnement de développement
+.idea/
+__pycache__/
+*.pyc
+
+# Environnement virtuel
+venv/
