@@ -32,10 +32,10 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 
 #Liste Objet button créer
 allButton = []
+specialButton = []
 
 #Affichage argent
 argent = 0
-argent_joueur = font.render (f"Patate: {argent}",True, (255,255,255))
 
 #Sauvegarde Partie
 def save():
@@ -72,15 +72,17 @@ def fps_counter():
 def draw():
     for i in allButton:
         i.draw()
+    for i in specialButton:
+        i.draw()
 
 def update_argent():
-    font.render(f"Patate: {notation_scientifique(argent, 2)}", True, (255, 255, 255))
-    screen.blit(argent_joueur, (screen_width / 2 - 100,  40))
+    t = font.render(f"Patate: {notation_scientifique(argent, 2)}", True, (255, 255, 255))
+    screen.blit(t, ((screen_width / 2)-50,  10))
 
 ###################################Bouton classe mère######################################
 
 class BaseButton():
-    def __init__(self, x, y, width, height, color, text, nom):
+    def __init__(self, x, y, width, height, color, nom):
         self.nom = nom
         # Gestion position
         self.x = x
@@ -91,7 +93,7 @@ class BaseButton():
         self.width = width
         self.height = height
         # Gestion contenu
-        self.text = text
+        self.text = nom
         # Savoir si le bouton apparaît
         self.actif = False
 
@@ -108,12 +110,23 @@ class BaseButton():
                 return True
         return False
 
+###################################Button Click Generale######################################
+class ButtonClick(BaseButton):
+    def __init__(self, x, y, width, height, color, nom):
+        super().__init__(x, y, width, height, color, nom)
+        #Gestion des gain quand click
+        self.mult = 1
 
-###################################Button######################################
+    def action(self):
+        global argent
+        argent+=self.mult
+        update_argent()
+
+###################################Button Achat######################################
 
 class ButtonAchat(BaseButton):
-    def __init__(self, x, y, width, height, color, text, prix, mult, image, nom):
-        super().__init__(x, y, width, height, color, text, nom)
+    def __init__(self, x, y, width, height, color, prix, mult, image, nom):
+        super().__init__(x, y, width, height, color, nom)
         # Gestion facteur progression prix
         self.mult = mult
         # Prix initial
@@ -123,9 +136,9 @@ class ButtonAchat(BaseButton):
         # Image associée au bouton
         self.image = pygame.image.load(image)
 
-        # Mettre à jour le texte du bouton en fonction du prix actuel
+    # Mettre à jour le texte du bouton en fonction du prix actuel
     def update_text(self):
-        self.text = f"{self.text}:{notation_scientifique(self.prix, 2)}"
+        self.text = f"{self.nom}:{notation_scientifique(self.prix, 2)}"
 
         # Regarde si le joueur peut payer en cas de clic
     def a_payer(self):
@@ -148,10 +161,11 @@ class ButtonAchat(BaseButton):
 
 
 #Création de mes bouttons
-allButton.append(ButtonAchat(10,130,200,50,(255,255,255),'Kamarade',10,3,"image/player.png",'Kamarade'))
+specialButton.append(ButtonClick(screen_width/2-40,50,100,50,(255,255,255),'click'))
+allButton.append(ButtonAchat(10,130,200,50,(255,255,255),10,3,"image/player.png",'Kamarade'))
 
 def game():
-    global argent,argent_joueur
+    global argent
     running = True
     while running:
         screen.blit(colour, (0, 0))
@@ -175,13 +189,20 @@ def game():
                 for i in allButton:
                     if i.on(pos):
                         i.a_payer()
+                for j in specialButton:
+                    if j.on(pos):
+                        j.action()
 
             if event.type == pygame.MOUSEMOTION:
-                for i in allButton:
+                for i,j in zip(allButton, specialButton):#zip permet de gérer les deux itération en même temps
                     if i.on(pos):
                         i.color = (255,0,0)
                     else:
                         i.color = (255,255,0)
+                    if j.on(pos):
+                        j.color = (255, 0, 0)
+                    else:
+                        j.color = (255,255,0)
 
         pygame.display.update()
         mainClock.tick(144)
