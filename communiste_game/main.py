@@ -38,6 +38,9 @@ specialButton = []
 #Affichage argent
 argent = 0
 
+#Gérer scolling
+scroll = 0
+
 #Sauvegarde Partie
 def save():
     f = open('save.txt','w')
@@ -76,7 +79,15 @@ def draw():
 
 def update_argent():
     t = font.render(f"Patate: {notation_scientifique(argent, 2)}", True, (255, 255, 255))
-    screen.blit(t, ((screen_width / 2)-50,  10))
+    screen.blit(t, ((screen_width / 2)-50,  specialButton[0].y-40))
+
+def move(x):
+    global scroll
+    print(scroll+x)
+    if -500 <= (scroll + x) <= 0:
+        for i in allButton:
+            i.move(x)
+        scroll+=x
 
 ###################################Bouton classe mère######################################
 
@@ -108,6 +119,9 @@ class BaseButton():
             if self.y < pos[1] < self.y + self.height:
                 return True
         return False
+
+    def move(self, x):
+        self.y+=x
 
 ###################################Button Click Generale######################################
 class ButtonClick(BaseButton):
@@ -206,12 +220,17 @@ def game():
                     running = False
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                for i in buyButton:
-                    if i.on(pos):
-                        i.a_payer()
-                for j in specialButton:
-                    if j.on(pos):
-                        j.action()
+                if event.button == 1:
+                    for i in buyButton:
+                        if i.on(pos):
+                            i.a_payer()
+                    for j in specialButton:
+                        if j.on(pos):
+                            j.action()
+                if event.button == 4:
+                    move(10)
+                if event.button == 5:
+                    move(-10)
 
             if event.type == pygame.MOUSEMOTION:
                 for i in buyButton:
