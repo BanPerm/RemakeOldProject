@@ -176,6 +176,7 @@ class ButtonAchat(BaseButton):
 specialButton.append(ButtonClick(screen_width/2-40,50,100,50,(255,255,255),'click'))
 buyButton.append(ButtonAchat(10,130,200,50,(255,255,255),10,3,0,"image/player.png",'Kamarade'))
 buyButton.append(ButtonAchat(10,190,200,50,(255,255,255),100,4,1,"image/champ.jpg","Champ"))
+buyButton.append(ButtonAchat(10,250,200,50,(255,255,255),10000,10,10,"image/vodka.png","Vodka"))
 for i in buyButton:
     allButton.append(i)
 for j in specialButton:
