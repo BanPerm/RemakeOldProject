@@ -32,6 +32,7 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 
 #Liste Objet button créer
 allButton = []
+buyButton = []
 specialButton = []
 
 #Affichage argent
@@ -71,8 +72,6 @@ def fps_counter():
 
 def draw():
     for i in allButton:
-        i.draw()
-    for i in specialButton:
         i.draw()
 
 def update_argent():
@@ -116,16 +115,22 @@ class ButtonClick(BaseButton):
         super().__init__(x, y, width, height, color, nom)
         #Gestion des gain quand click
         self.mult = 1
+        self.auto = 0
 
     def action(self):
         global argent
         argent+=self.mult
         update_argent()
 
+    def automatique(self):
+        global argent
+        argent+=self.auto
+        update_argent()
+
 ###################################Button Achat######################################
 
 class ButtonAchat(BaseButton):
-    def __init__(self, x, y, width, height, color, prix, mult, image, nom):
+    def __init__(self, x, y, width, height, color, prix, mult,auto, image, nom):
         super().__init__(x, y, width, height, color, nom)
         # Gestion facteur progression prix
         self.mult = mult
@@ -133,8 +138,13 @@ class ButtonAchat(BaseButton):
         self.prix = prix
         # Nombre de fois acheté
         self.nbachat = 0
+        #Si le button augmente la puissance de click ou farm en automatique et si oui à quelle puissance
+        self.auto = auto
         # Image associée au bouton
         self.image = pygame.image.load(image)
+        self.widthImage = ((self.image.get_width()/self.image.get_height())*height)
+        self.image = pygame.transform.scale(self.image,(self.widthImage,height))
+        self.update_text()
 
     # Mettre à jour le texte du bouton en fonction du prix actuel
     def update_text(self):
@@ -147,13 +157,15 @@ class ButtonAchat(BaseButton):
             argent -= self.prix
             self.prix = round(self.mult * self.prix)
             self.nbachat += 1
+            specialButton[0].mult+=max(1,1-self.auto)
+            specialButton[0].auto+=self.auto
             self.update_text()
 
     # Dessiner l'image du bouton en fonction du nombre d'achats
     def draw_image(self):
         nb = min(self.nbachat, 10)
         for x in range(nb):
-            screen.blit(self.image, (220 + (x * 60), self.y))
+            screen.blit(self.image, (self.x+self.width+30 + (x * (self.widthImage-5)), self.y))
 
     # Détruire le bouton (cette méthode peut être adaptée selon les besoins)
     def destroy(self):
@@ -162,7 +174,13 @@ class ButtonAchat(BaseButton):
 
 #Création de mes bouttons
 specialButton.append(ButtonClick(screen_width/2-40,50,100,50,(255,255,255),'click'))
-allButton.append(ButtonAchat(10,130,200,50,(255,255,255),10,3,"image/player.png",'Kamarade'))
+buyButton.append(ButtonAchat(10,130,200,50,(255,255,255),10,3,0,"image/player.png",'Kamarade'))
+buyButton.append(ButtonAchat(10,190,200,50,(255,255,255),100,4,1,"image/champ.jpg","Champ"))
+for i in buyButton:
+    allButton.append(i)
+for j in specialButton:
+    allButton.append(j)
+
 
 def game():
     global argent
@@ -171,7 +189,8 @@ def game():
         screen.blit(colour, (0, 0))
         draw()
         update_argent()
-        for i in allButton:
+        specialButton[0].automatique()
+        for i in buyButton:
             i.draw_image()
         fps_counter()
 
@@ -186,7 +205,7 @@ def game():
                     running = False
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                for i in allButton:
+                for i in buyButton:
                     if i.on(pos):
                         i.a_payer()
                 for j in specialButton:
@@ -194,15 +213,16 @@ def game():
                         j.action()
 
             if event.type == pygame.MOUSEMOTION:
-                for i,j in zip(allButton, specialButton):#zip permet de gérer les deux itération en même temps
+                for i in buyButton:
                     if i.on(pos):
                         i.color = (255,0,0)
                     else:
-                        i.color = (255,255,0)
+                        i.color = (255, 255, 0)
+                for j in specialButton:
                     if j.on(pos):
                         j.color = (255, 0, 0)
                     else:
-                        j.color = (255,255,0)
+                        j.color = (255, 255, 0)
 
         pygame.display.update()
         mainClock.tick(144)
