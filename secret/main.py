@@ -76,11 +76,11 @@ class Player():
 
         if keys[pygame.K_q]:
             if keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]:self.l -= 1
-            else:self.a -= 4;self.reset_angle()
+            else:self.a -= 1;self.reset_angle()
 
         if keys[pygame.K_d]:
             if keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]:self.l += 1
-            else:self.a += 4;self.reset_angle()
+            else:self.a += 1;self.reset_angle()
 
         dx = math.sin(math.radians(self.a)) * 1
         dy = math.cos(math.radians(self.a)) * 1
@@ -118,7 +118,7 @@ def game():
 
 
         pygame.display.update()
-        mainClock.tick(144)
+        mainClock.tick(60)
 
 game()
 
