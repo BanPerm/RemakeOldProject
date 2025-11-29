@@ -3,6 +3,7 @@ import json
 import tkinter as tk
 from tkinter import Button, TOP
 from tkinter import filedialog
+from numpy import gcd
 
 """
 Ce programme fonctionne avec une interface graphique sous le module tkinter
@@ -43,56 +44,116 @@ decrypt_button.pack(side=tk.LEFT, padx=5, pady=5)
 
 ########################################Fonction utiliser pour le RSA########################################
 
-# 100% sur de fonctionner
-def EuclideEtendue(a, b):
-    if b == 0:
-        return (a, 1, 0)
-    else:
-        (c, v, g) = EuclideEtendue(b, a % b)
-        (a, z, e) = (c, g, v - (a // b) * g)
-    return (a, z, e)
+
+def random_bit(n):
+    """
+    Generate a random number of size n bits
+    
+    :param n: Number of bis
+    """
+    return(random.randrange(2**(n-1)+1, 2**n-1))
+
+def sieve_eratosthene(n):
+    """
+    Calculate list of first prime number
+    
+    :param n: max number to test
+    """
+
+    prime = [True] * (n+1)
+    p=2
+
+    while p*p <= n:
+        if prime[p]:
+            for i in range(p*p, n+1, p):
+                prime[i] = False
+        p+=1
+    
+    res = []
+    for p in range(2, n+1):
+        if prime[p]:
+            res.append(p)
+    
+    return res
+
+first_prime_list = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367, 373, 379, 383]
+
+def primality_test(n):
+    """
+    Return True if n is probably prime
+    
+    :param n: Number we want to test
+    """
+    while True:
+        candidate = random_bit(n)
+        for divisor in first_prime_list:
+            if candidate%divisor != 0 and divisor**2>=candidate:
+                return candidate
+            
+def is_miller_rabin_passed(n, k=20):
+    """
+    Return True if n is probably prime
+    
+    :param n: Number we want to test
+    :param k: Number of round (more accurate if bigger)
+    """
+    if n<2:
+        return False
+
+    if n == 2 or n==3:
+        return True
+    
+    if n%2 == 0:
+        return False
+    
+    r = 0
+    s = n-1
+    while s%2 == 0:
+        r+=1
+        s//=2
+    for _ in range(k):
+        a = random.randrange(2,n-1)
+        x = pow(a,s,n)
+        if x==1 or x==n-1:
+            continue
+        for _ in range(r-1):
+            x = pow(x,2,n)
+            if x==n-1:
+                break
+        else:
+            return False
+    return True
 
 
-# 100% fonctionnel
-def premier_entre_eux(n, a):
-    if n <= 1:
-        return 0
-    if n % a == 0:
-        return 0
-    if pow(a, n - 1, n) == 1:
-        return 1
-    else:
-        return 0
+def generate_prime_number(n):
+    number = primality_test(n)
+    while not is_miller_rabin_passed(number):
+        number = primality_test(n)
+    return number
+
+########################################Handle encode and decode########################################
+
+def generate_keys(size=100):
+    print('hello')
+    p = generate_prime_number(size)
+    q = generate_prime_number(size)
+
+    print('test')
+
+    n = p*q
+    phi = (p-1)*(q-1)
+
+    e = 2
+    while e<phi and gcd(e,phi) != 1:
+        e+=1
+
+    d = 2
+    while d<phi and (e*d)%phi !=1:
+        d+=1
+
+    return e,d,n
 
 
-# 100% fonctionnel
-def my_random(a, b):
-    return random.randint(a, b)
-
-
-# 100% fonctionnel
-def nombre_premier(longueur):
-    a = my_random(2 ** (longueur - 1), 2 ** longueur)
-    while not premier_entre_eux(a, 2) or not premier_entre_eux(a, 3):
-        a = my_random(2 ** (longueur - 1), 2 ** longueur)
-    return a
-
-
-# 100% fonctionnel
-def find_e(total):
-    e = my_random(2, total)
-    while not (e < total and premier_entre_eux(e, total)):
-        e = my_random(2, total)
-    return e
-
-
-# 100% fonctionnel
-def find_d(total, e):
-    a, b, c = EuclideEtendue(total, e)
-    return c % total
-
-
-# 100% sur de fonctionner
 def binaire_modulo(a, e, n):
     result = 1
     while e > 0:
@@ -105,14 +166,11 @@ def binaire_modulo(a, e, n):
 
 def rsa_chiffre(m, e, n):
     a = m % n
-    l = binaire_modulo(a, e, n)
-    return l
-
+    return binaire_modulo(a, e, n)
 
 def rsa_dechiffre(c, d, n):
     a = c % n
-    l = binaire_modulo(a, d, n)
-    return l
+    return binaire_modulo(a, d, n)
 
 #----------------------------------------Fin fonction pour RSA----------------------------------------#
 
@@ -191,15 +249,7 @@ def action(type):
 
     #Création fichier clé public et privée en cas de fichier ou contenu de fichier manquant
     if public_key is None or private_key is None:
-        p = nombre_premier(500)
-        q = nombre_premier(500)
-
-        n = p * q
-
-        total = (q - 1) * (p - 1)
-
-        e = find_e(total)
-        d = find_d(total, e)
+        e,d,n = generate_keys(100)
 
         public_key = e, n
         private_key = d, n
