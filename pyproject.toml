@@ -1,0 +1,9 @@
+# Source - https://stackoverflow.com/a
+# Posted by squarespiral
+# Retrieved 2025-12-03, License - CC BY-SA 4.0
+
+[tool.ruff.lint]
+select = ["ALL"]
+
+[tool.ruff]
+line-length = 120
